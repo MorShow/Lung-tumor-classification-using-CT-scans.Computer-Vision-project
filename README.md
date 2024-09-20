@@ -1,3 +1,5 @@
+DATA: data can be downloaded from this resource ...
+
 The project consists of 3 main parts:
 
 1) Segmentation task (Unet)
