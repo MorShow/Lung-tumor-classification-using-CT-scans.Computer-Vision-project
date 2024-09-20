@@ -1,4 +1,5 @@
-DATA: data can be downloaded from this resource ...
+DATA: data can be downloaded from this website https://luna16.grand-challenge.org/Download/
+The LUNA Grand Challenge is an open dataset with the labels of patient CT scans and the leader board of classification models against the data. The main goal of this challenge is to encourage improvements in nodule detection.
 
 The project consists of 3 main parts:
 
