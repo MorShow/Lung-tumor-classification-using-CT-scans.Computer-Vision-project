@@ -163,7 +163,7 @@ class ClassificationTrainingApp:
 
                 model = model.to(self.device)
 
-            return model
+        return model
 
     def init_optimizer(self):
         lr = 0.003 if self.cli_args.finetune else 0.001
