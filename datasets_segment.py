@@ -50,7 +50,7 @@ def get_candidate_info_list(require_on_disk_bool=True):
                 )
             )
 
-    with open('data/part2/luna/candidates.csv', "r") as f:
+    with open('data/candidates.csv', "r") as f:
         for row in list(csv.reader(f))[1:]:
             series_uid = row[0]
 
