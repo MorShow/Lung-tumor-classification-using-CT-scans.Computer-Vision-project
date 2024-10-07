@@ -155,13 +155,13 @@ class ClassificationTrainingApp:
                 if n.split('.')[0] not in finetune_blocks:
                     p.requires_grad_(False)
 
-            if self.use_cuda:
-                log.info("Using CUDA; {} devices.".format(torch.cuda.device_count()))
+        if self.use_cuda:
+            log.info("Using CUDA; {} devices.".format(torch.cuda.device_count()))
 
-                if torch.cuda.device_count() > 1:
-                    model = nn.DataParallel(model)
+            if torch.cuda.device_count() > 1:
+                model = nn.DataParallel(model)
 
-                model = model.to(self.device)
+            model = model.to(self.device)
 
         return model
 
@@ -383,15 +383,21 @@ class ClassificationTrainingApp:
 
         metrics_dict['correct/all'] = (pos_correct + neg_correct) / metrics.shape[1] * 100
         metrics_dict['correct/neg'] = neg_correct / neg_count * 100
-        metrics_dict['correct/pos'] = pos_correct / pos_count * 100
+        if pos_count != 0:
+            metrics_dict['correct/pos'] = pos_correct / pos_count * 100
+        else:
+            metrics_dict['correct/pos'] = 0
 
         precision = metrics_dict['pr/precision'] = tp_count / np.float64(tp_count + fp_count)
         recall = metrics_dict['pr/recall'] = tp_count / np.float64(tp_count + fn_count)
         metrics_dict['pr/f1_score'] = 2 * (precision * recall) / (precision + recall)
 
-        threshold = torch.linspace(1, 0)
+        threshold = torch.linspace(start=1, end=1, steps=len(bins))
 
-        tpr = (metrics[None, METRICS_PRED_P_IDX, pos_label_mask] >= threshold[:, None]).sum(1).float() / pos_count
+        if pos_count != 0:
+            tpr = (metrics[None, METRICS_PRED_P_IDX, pos_label_mask] >= threshold[:, None]).sum(1).float() / pos_count
+        else:
+            tpr = (metrics[None, METRICS_PRED_P_IDX, pos_label_mask] >= threshold[:, None]).sum(1).float() * 0
         fpr = (metrics[None, METRICS_PRED_P_IDX, neg_label_mask] >= threshold[:, None]).sum(1).float() / neg_count
 
         fp_diff = fpr[1:] - fpr[:-1]
@@ -446,6 +452,13 @@ class ClassificationTrainingApp:
             self.total_training_samples_count,
             bins=bins
         )
+
+        if not self.cli_args.malignant:
+            score = metrics_dict['pr/f1_score']
+        else:
+            score = metrics_dict['auc']
+
+        return score
 
     def save_model(self, type_str, epoch_idx, is_best=False):
         file_path = os.path.join(
@@ -826,7 +839,7 @@ class SegmentationTrainingApp:
 
                 # False Negative => Orange
                 image_a[:, :, 0] += np.logical_and((1 - prediction_a), label_a)
-                image_a[:, :, 1] += np.logical_and(((1 - prediction_a), label_a)) * 0.5
+                image_a[:, :, 1] += np.logical_and((1 - prediction_a), label_a) * 0.5
 
                 # True Positive => Green
                 image_a[:, :, 1] += np.logical_and(prediction_a, label_a)
